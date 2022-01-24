@@ -1,0 +1,72 @@
+const express = require('express');
+const session=require('express-session');
+const res = require('express/lib/response');
+const app = express()
+
+// app.use("view engine",'ejs').
+
+app.use(express.json())
+app.use(express.urlencoded({extended:false}))
+
+const users = [
+    {id:1,email:"a@gmail.com",password:"password"},
+    {id:2,email:"b@gmail.com",password:"password"},
+    {id:3,email:"c@gmail.com",password:"password"},
+]
+
+
+app.use(session({
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: true,
+    name: "token",
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24,
+        Path2D:10
+
+    }
+}))
+  
+app.get('/res', (req, res) => {
+    res.send(`
+       <form method="post" action="/res">
+       <input type="email" name="email"/>
+       <input type="password" name="password"/>
+       <input type="submit"/>
+       </form>
+    `)
+})
+
+const midddle = (req,res,next) => {
+    if (! req.session.clintId) {
+        res.send("err")
+    }
+    next()
+}
+
+
+
+app.post('/login', (req, res) => {
+    const { email, password } = req.body
+    req.session.clintId = "123456"
+    res.send("session done")
+})
+
+app.post('/', (req, res, next) => {
+    req.session.destroy()
+    res.clearCookie("token")
+    res.redirect('/login')
+})
+
+app.get('/home',midddle ,(req, res) => {
+    res.send("yes")
+})
+
+app.get('/', (req, res) => {
+    return res.json(req.session.userId)
+    
+})
+
+app.listen(5000,() => {
+    console.log("server on 5000");
+})
